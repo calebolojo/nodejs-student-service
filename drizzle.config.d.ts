@@ -1,5 +1,6 @@
 import "dotenv/config";
 export declare const isProduction: boolean;
+export declare const DB_URL: string;
 declare const _default: import("drizzle-kit").Config;
 export default _default;
 //# sourceMappingURL=drizzle.config.d.ts.map
