@@ -1,11 +1,11 @@
 {
-  "name": "055-student-crud-service",
+  "name": "nodejs-student-crud-service",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "start": "cross-env NODE_ENV=production node src/index.js",
+    "start": "cross-env NODE_ENV=production node dist/index.js",
     "dev": "npx tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:push": "npx drizzle-kit push",
