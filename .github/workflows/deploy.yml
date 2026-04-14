@@ -45,6 +45,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
+          timeout: 60s
           script: |
             APP_DIR="/var/www/nodejs-student-service"
             APP_NAME="nodejs-student-service"
