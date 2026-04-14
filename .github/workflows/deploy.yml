@@ -1,5 +1,9 @@
 name: Deploy nodejs-student-service
 
+env:
+  APP_NAME: "nodejs-student-service"
+  APP_DIR: "/home/ec2-user/var/www/nodejs-student-service"
+
 on:
   push:
     branches: [main]
