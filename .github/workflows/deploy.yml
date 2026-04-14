@@ -1,9 +1,5 @@
 name: Deploy nodejs-student-service
 
-env:
-  APP_NAME: "nodejs-student-service"
-  APP_DIR: "/home/ec2-user/var/www/nodejs-student-service"
-
 on:
   push:
     branches: [main]
@@ -48,6 +44,7 @@ jobs:
           script: |
             APP_DIR: "/home/ec2-user/var/www/nodejs-student-service"
             APP_NAME: "nodejs-student-service"
+            USER: "ec2-user"
 
             # ── 1. Remove any existing Node.js versions and Install new Nodejs ──────────────────────────
             echo "Removing and installing a new Node.js..."
@@ -61,25 +58,25 @@ jobs:
 
             # ── 2. Cremove current app folder if existing ──────────────────────────
             echo "Removing old app directory..."
-            rm -rf ${{env.APP_DIR}}
+            rm -rf $APP_DIR
 
             # ── 3. Create new app folder directory ──────────────────────────
             # Ensure the directory exists and is owned by your user
             echo "Ensure the directory exists and is owned by your user..."
-            sudo mkdir -p ${{env.APP_DIR}}
-            sudo chown -R $USER:$USER /${{env.APP_DIR}}
-            sudo chown -R $USER:$USER /${{env.APP_DIR}}
+            sudo mkdir -p $APP_DIR
+            sudo chown -R $USER:$USER /$APP_DIR
+            sudo chown -R $USER:$USER /$APP_DIR
 
             # ── 4. Clone or pull latest code ──────────────────────────
-            if [ -d "${{ env.APP_DIR }}/.git" ]; then
+            if [ -d "$APP_DIR/.git" ]; then
               echo "Repo exists — pulling latest changes..."
-              cd ${{ env.APP_DIR }}
+              cd $APP_DIR
               git pull https://${{ secrets.G_HUB_USERNAME }}:${{ secrets.G_HUB_TOKEN }}@github.com/${{ secrets.G_HUB_USERNAME }}/${{ secrets.G_HUB_REPOSITORY }}.git main
             else
               echo "Fresh clone..."
-              rm -rf ${{ env.APP_DIR }}
-              git clone https://${{ secrets.G_HUB_USERNAME }}:${{ secrets.G_HUB_TOKEN }}@github.com/${{ secrets.G_HUB_USERNAME }}/${{ secrets.G_HUB_REPOSITORY }}.git ${{ env.APP_DIR }}
-              cd ${{ env.APP_DIR }}
+              rm -rf $APP_DIR
+              git clone https://${{ secrets.G_HUB_USERNAME }}:${{ secrets.G_HUB_TOKEN }}@github.com/${{ secrets.G_HUB_USERNAME }}/${{ secrets.G_HUB_REPOSITORY }}.git $APP_DIR
+              cd $APP_DIR
             fi
 
             # ── 5. Clean install dependencies (production only) ───────────────────────────────────────
@@ -96,7 +93,7 @@ jobs:
             sudo systemctl restart postgresql
 
             # ── 4. Restart app with PM2 ───────────────────────────────
-            pm2 start dist/index.js --name "${{env.APP_NAME}}" -i max
+            pm2 start dist/index.js --name "$APP_NAME" -i max
 
             pm2 save
 
