@@ -1,7 +1,8 @@
 name: Deploy nodejs-student-service
 
 env:
-  APP_DIR_NAME: "/nodejs-student-service"
+  APP_NAME: "nodejs-student-service"
+  APP_DIR: "/home/ec2-user/var/www/nodejs-student-service"
 
 on:
   push:
@@ -24,10 +25,10 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-        
+
       - name: Clear npm cache
         run: npm cache clean --force
-        
+
       - name: Install dependencies
         run: npm ci
 
@@ -56,22 +57,30 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
+            APP_DIR: "/home/ec2-user/var/www/nodejs-student-service"
+
             echo "Installing Node.js..."
             # Remove any existing Node.js versions
             sudo dnf remove -y nodejs
-            
+
             # Install Node.js 18
             sudo dnf install -y nodejs
 
             # Verify
             node -v && npm -v
 
-            # Ensure the directory exists and is owned by your user
-            sudo mkdir -p /var/www/${{env.APP_DIR_NAME}}
-            sudo chown -R $USER:$USER /var/www
-            sudo chown -R $USER:$USER /var/www/${{env.APP_DIR_NAME}}
+            # Remove old directory and re-clone fresh
+            rm -rf ${{env.APP_DIR}}
 
-            cd /var/www/${{env.APP_DIR_NAME}}
+            # Ensure the directory exists and is owned by your user
+            sudo mkdir -p ${{env.APP_DIR}}
+            sudo chown -R $USER:$USER /${{env.APP_DIR}}
+            sudo chown -R $USER:$USER /${{env.APP_DIR}}
+
+            # Clone using a deploy token or PAT
+            git clone https://${{secrets.G_HUB_USERNAME}}:${{ secrets.G_HUB_TOKEN }}@github.com/${{secrets.G_HUB_USERNAME}}/${{ secrets.G_HUB_REPOSITORY }}.git ${{env.APP_DIR}}
+
+            cd ${{env.APP_DIR}}
 
             # Pull latest code
             git pull origin main
