@@ -1,8 +1,6 @@
-CREATE DATABASE student_record;
-
+CREATE DATABASE student;
 CREATE USER myuser WITH PASSWORD 'password';
-
-GRANT CONNECT ON DATABASE student_record TO myuser;
+GRANT ALL PRIVILEGES ON DATABASE student TO myuser;
 
 
 CREATE TABLE students (
