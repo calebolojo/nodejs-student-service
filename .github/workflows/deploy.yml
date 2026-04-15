@@ -120,8 +120,7 @@ jobs:
               echo "ERROR: dist folder not found after build, aborting!"
               exit 1
             fi
-            ls -la "$APP_DIR/dist"
-            ls -la "$APP_DIR/dist/" 
+            find "$APP_DIR/dist" -print  
 
             # ── 8. Prune devDependencies after build ──────────────────
             echo "Pruning devDependencies..."
