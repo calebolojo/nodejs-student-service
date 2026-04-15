@@ -120,7 +120,7 @@ jobs:
             echo "✅ Build complete"
 
             # ── 6. List Build output files ───────────────────────────────────────
-            echo "📁 Listing build output...
+            echo "📁 Listing build output..."
             ls -la "$APP_DIR/dist"
             ls -la "$APP_DIR/dist/*.js" 
 
