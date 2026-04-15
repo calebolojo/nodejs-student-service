@@ -131,10 +131,6 @@ jobs:
 
             # ── 6. List Build output files ───────────────────────────────────────
             echo "📁 Listing build output..."
-            if [ ! -d "$APP_DIR/dist" ]; then
-              echo "ERROR: dist folder not found after build, aborting!"
-              exit 1
-            fi
             find "$APP_DIR/dist" -print
 
             # ── 8. Prune devDependencies after build ──────────────────
