@@ -118,8 +118,7 @@ jobs:
 
             # Migrate all new SQl schema changes - using drizzle-kit push
             echo "Migrating database schema changes..."
-            npm run db:push
-            sudo systemctl restart postgresql
+            npx drizzle-kit push
             echo "✅ Database migration completed"
 
             # ── 4. Restart app with PM2 ───────────────────────────────
