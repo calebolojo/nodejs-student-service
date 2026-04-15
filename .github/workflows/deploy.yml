@@ -47,60 +47,78 @@ jobs:
           port: ${{ secrets.EC2_PORT }}
           timeout: 60s
           script: |
-            APP_DIR="/var/www/nodejs-student-service"
-            APP_NAME="nodejs-student-service"
+            APP_DIR=/var/www/nodejs-student-service
+            APP_NAME=nodejs-student-service
 
-            # ── 1. Remove any existing Node.js versions and Install new Nodejs ──────────────────────────
-            echo "Removing and installing a new Node.js..."
-            sudo dnf remove -y nodejs
+            # ── 1. Safety checks ──────────────────────────────────────
+            if [ -z "$APP_DIR" ]; then
+              echo "ERROR: APP_DIR is empty, aborting!"
+              exit 1
+            fi
 
+            DEPTH=$(echo "$APP_DIR" | tr -cd '/' | wc -c)
+            if [ "$DEPTH" -lt 3 ]; then
+              echo "ERROR: APP_DIR '$APP_DIR' is too shallow, aborting!"
+              exit 1
+            fi
+
+            BLOCKED="/ /var /var/www /home /etc /usr /bin /sbin"
+            for BLOCKED_PATH in $BLOCKED; do
+              if [ "$APP_DIR" = "$BLOCKED_PATH" ]; then
+                echo "ERROR: APP_DIR '$APP_DIR' is a protected path, aborting!"
+                exit 1
+              fi
+            done
+
+            echo "✅ Safety checks passed for $APP_DIR"
+
+            # ── 2. Safety checks ──────────────────────────────────────
             # Install Node.js 18
             sudo dnf install -y nodejs
 
             # Verify
             node -v && npm -v
 
-            # ── 2. Cremove current app folder if existing ──────────────────────────
-            echo "Removing old app directory..."
+            # ── 3. Safe remove ────────────────────────────────────────
             if [ -d "$APP_DIR" ]; then
-              sudo chown $USER:$USER $APP_DIR
-              sudo rm -rf $APP_DIR
-              echo "Removed $APP_DIR"
+              echo "Directory exists — removing safely..."
+              sudo chown -R $USER:$USER "$APP_DIR"
+              sudo rm -rf "$APP_DIR"
+              echo "✅ Removed $APP_DIR"
+              sudo mkdir -p "$APP_DIR"
+              sudo chown -R $USER:$USER "$APP_DIR"
+              echo "✅ Recreated $APP_DIR"
             else
-              echo "Folder does not exist, skipping..."
+              echo "Directory does not exist — creating..."
+              sudo mkdir -p "$APP_DIR"
+              sudo chown -R $USER:$USER "$APP_DIR"
+              echo "✅ Created $APP_DIR"
             fi
 
-            # ── 3. Create new app folder directory ──────────────────────────
-            # Ensure the directory exists and is owned by your user
-            echo "Ensure the directory exists and is owned by your user..."
-            sudo mkdir -p $APP_DIR
-            sudo chown $USER:$USER $APP_DIR
-            sudo chown $USER:$USER $APP_DIR
+
 
             # ── 4. Clone or pull latest code ──────────────────────────
-            if [ -d "$APP_DIR/.git" ]; then
-              echo "Repo exists — pulling latest changes..."
-              cd $APP_DIR
-              git pull https://${{ secrets.G_HUB_USERNAME }}:${{ secrets.G_HUB_TOKEN }}@github.com/${{ secrets.G_HUB_USERNAME }}/${{ secrets.G_HUB_REPOSITORY }}.git main
-            else
-              echo "Fresh clone..."
-              rm -rf $APP_DIR
-              git clone https://${{ secrets.G_HUB_USERNAME }}:${{ secrets.G_HUB_TOKEN }}@github.com/${{ secrets.G_HUB_USERNAME }}/${{ secrets.G_HUB_REPOSITORY }}.git $APP_DIR
-              cd $APP_DIR
-            fi
+            echo "Cloning repository..."
+            sudo git clone https://${{ secrets.G_HUB_USERNAME }}:${{ secrets.G_HUB_TOKEN }}@github.com/${{ secrets.G_HUB_USERNAME }}/${{ secrets.G_HUB_REPOSITORY }}.git "$APP_DIR"
+            sudo chown -R $USER:$USER "$APP_DIR"
+            echo "✅ Clone complete"
 
-            # ── 5. Clean install dependencies (production only) ───────────────────────────────────────
-            echo "Clean installing all dependencies..."
+            # ── 4. Install dependencies ───────────────────────────────
+            echo "Installing dependencies..."
+            cd "$APP_DIR"
             npm ci --omit=dev
+            echo "✅ Dependencies installed"
 
             # ── 6. Build on EC2 ───────────────────────────────────────
             echo "Building the application.."
             npm run build
+            echo "✅ Build complete"
 
             # Migrate all new SQl schema changes - using drizzle-kit push
             echo "Migrating database schema changes..."
             npm run db:push
             sudo systemctl restart postgresql
+            echo "✅ Database migration completed"
 
             # ── 4. Restart app with PM2 ───────────────────────────────
             pm2 start dist/index.js --name "$APP_NAME" -i max
