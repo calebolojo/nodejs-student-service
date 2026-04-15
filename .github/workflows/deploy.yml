@@ -121,7 +121,7 @@ jobs:
               exit 1
             fi
             ls -la "$APP_DIR/dist"
-            ls -la "$APP_DIR/dist/*.js" 
+            ls -la "$APP_DIR/dist/" 
 
             # ── 8. Prune devDependencies after build ──────────────────
             echo "Pruning devDependencies..."
