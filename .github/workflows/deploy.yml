@@ -87,13 +87,11 @@ jobs:
               echo "✅ Removed $APP_DIR"
               sudo mkdir -p "$APP_DIR"
               sudo chown -R $USER:$USER "$APP_DIR"
-              cd "$APP_DIR"
               echo "✅ Recreated $APP_DIR"
             else
               echo "Directory does not exist — creating..."
               sudo mkdir -p "$APP_DIR"
               sudo chown -R $USER:$USER "$APP_DIR"
-              cd "$APP_DIR"
               echo "✅ Created $APP_DIR"
             fi
 
@@ -106,6 +104,7 @@ jobs:
 
             # ── 4. Install dependencies ───────────────────────────────
             echo "Installing dependencies..."
+            cd "$APP_DIR"
             npm ci --omit=dev
             echo "✅ Dependencies installed"
 
