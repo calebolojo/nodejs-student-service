@@ -77,10 +77,10 @@ jobs:
 
             # ── 2. Safety checks ──────────────────────────────────────
             # Install Node.js 18
-            sudo dnf install -y nodejs
-
-            # Verify
-            node -v && npm -v
+            echo "Installing Node.js and Git..."
+            sudo dnf install -y nodejs git
+            node -v && npm -v && git --version
+            echo "✅ Node.js and Git installed"
 
             # ── 3. Safe remove ────────────────────────────────────────
             if [ -d "$APP_DIR" ]; then
@@ -98,12 +98,7 @@ jobs:
               echo "✅ Created $APP_DIR"
             fi
 
-
-
-            # ── 4. Git, Clone or pull latest code ──────────────────────────
-            echo "Installing git..."
-            sudo dnf install -y git
-            echo "✅ Git installed"
+            # ── 4. Clone or pull latest code ──────────────────────────
             echo "Cloning repository..."
             sudo git clone https://${{ secrets.G_HUB_USERNAME }}:${{ secrets.G_HUB_TOKEN }}@github.com/${{ secrets.G_HUB_USERNAME }}/${{ secrets.G_HUB_REPOSITORY }}.git "$APP_DIR"
             echo "✅ Clone complete"
@@ -111,7 +106,7 @@ jobs:
             # ── 4. Install dependencies ───────────────────────────────
             echo "Installing dependencies..."
             cd "$APP_DIR"
-            npm ci --omit=dev
+            npm ci
             echo "✅ Dependencies installed"
 
             # ── 6. Build on EC2 ───────────────────────────────────────
@@ -121,8 +116,17 @@ jobs:
 
             # ── 6. List Build output files ───────────────────────────────────────
             echo "📁 Listing build output..."
+            if [ ! -d "$APP_DIR/dist" ]; then
+              echo "ERROR: dist folder not found after build, aborting!"
+              exit 1
+            fi
             ls -la "$APP_DIR/dist"
             ls -la "$APP_DIR/dist/*.js" 
+
+            # ── 8. Prune devDependencies after build ──────────────────
+            echo "Pruning devDependencies..."
+            npm prune --omit=dev    # ← remove devDeps now that build is done
+            echo "✅ Pruned devDependencies"
 
             # Migrate all new SQl schema changes - using drizzle-kit push
             echo "Migrating database schema changes..."
