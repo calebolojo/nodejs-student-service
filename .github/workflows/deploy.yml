@@ -136,7 +136,6 @@ jobs:
               exit 1
             fi
             find "$APP_DIR/dist" -print
-            pwd
 
             # ── 8. Prune devDependencies after build ──────────────────
             echo "Pruning devDependencies..."
